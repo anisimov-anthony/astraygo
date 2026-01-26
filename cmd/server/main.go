@@ -1,8 +1,11 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/anisimov-anthony/astraygo/internal/database"
 	"github.com/anisimov-anthony/astraygo/internal/handlers"
+	"github.com/anisimov-anthony/astraygo/internal/logging"
 	"github.com/anisimov-anthony/astraygo/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -10,7 +13,8 @@ import (
 
 func main() {
 	// Config
-	gin.SetMode(gin.DebugMode)
+	logger := logging.InitLogger()
+	defer logger.Sync()
 
 	// Postgres
 	pgPool := database.InitPostgres()
@@ -31,9 +35,9 @@ func main() {
 	// Routing
 	router := gin.New()
 	router.Use(gin.Recovery())
-	router.Use(gin.Logger())
+	router.Use(logging.ZapLogger(logger))
 
-	router.GET("/ids", func(c *gin.Context) {
+	router.GET("/objects/ids", func(c *gin.Context) {
 		handler.GetAllIDs(c)
 	})
 
@@ -43,6 +47,10 @@ func main() {
 
 	router.POST("/objects", func(c *gin.Context) {
 		handler.PostObject(c)
+	})
+
+	router.GET("/healthz", func(c *gin.Context) {
+		c.Status(http.StatusOK)
 	})
 
 	router.Run(":8080")

@@ -1,1 +1,6 @@
 *.env
+!.env.example
+
+monitoring/elastic_data/
+monitoring/prometheus_data/
+monitoring/grafana_data/

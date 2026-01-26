@@ -1,7 +1,8 @@
 services:
   main:
     build: .
-    network_mode: "host"
+    ports:
+      - "8080:8080"
     depends_on:
       redis:
         condition: service_healthy
@@ -11,26 +12,69 @@ services:
       REDIS_CONN_STR: ${REDIS_CONN_STR}
       PG_CONN_STR: ${PG_CONN_STR}
     logging:
-      driver: "local"
-    restart: on-failure
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+    restart: unless-stopped
 
   redis:
-    image: "redis:8-alpine"
-    network_mode: "host"
+    image: "redis:8-bookworm"
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 1s
+      interval: 2s
       timeout: 3s
       retries: 5
 
   postgres:
-    image: "postgres:18-alpine"
-    network_mode: "host"
+    image: "postgres:18-bookworm"
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 1s
+      interval: 2s
       timeout: 3s
       retries: 5
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.12.0
+    user: root
+    environment:
+      - ELK_HOSTS=${ELK_HOSTS}
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: ["filebeat", "-e", "-strict.perms=false"]
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: unless-stopped

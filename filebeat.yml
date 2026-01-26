@@ -1,0 +1,8 @@
+filebeat.inputs:
+  - type: container
+    paths:
+      - "/var/lib/docker/containers/*/*.log"
+    exclude_files: [".*logstash.*", ".*elasticsearch.*", ".*kibana.*"]
+
+output.logstash:
+  hosts: "${ELK_HOSTS}"
