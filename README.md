@@ -35,6 +35,17 @@ docker compose up -d --build
 
 The service will be available at `http://localhost:8080`
 
+### Benchmarks
+
+In `wrk_load` directory:
+```bash
+# for benchmark results
+./run_wrk_benchmark.sh
+
+# for report generation
+./generate_report.sh
+``` 
+
 ## License
 
 MIT License - see [LICENSE](LICENSE)
