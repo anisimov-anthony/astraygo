@@ -45,13 +45,15 @@ services:
     image: docker.elastic.co/beats/filebeat:8.12.0
     user: root
     environment:
-      - ELK_HOSTS=${ELK_HOSTS}
+      - ELK_HOST=${ELK_HOST}
     volumes:
       - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: ["filebeat", "-e", "-strict.perms=false"]
     restart: unless-stopped
+    extra_hosts:
+      - "localhost:host-gateway"
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -66,6 +68,22 @@ services:
       - "--path.rootfs=/rootfs"
       - "--path.sysfs=/host/sys"
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    environment:
+      - DATA_SOURCE_NAME=${PG_CONN_STR}
+    ports:
+      - "9187:9187"
+    restart: unless-stopped
+
+  redis-exporter:
+    image: oliver006/redis_exporter
+    environment:
+      - REDIS_ADDR=${REDIS_CONN_STR}
+    ports:
+      - "9121:9121"
     restart: unless-stopped
 
   cadvisor:

@@ -1,0 +1,42 @@
+scrape_configs:
+  - job_name: "prometheus"
+    scrape_interval: 20s
+    static_configs:
+      - targets:
+          - "localhost:9090"
+
+  - job_name: "main-app"
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - "app-host:8080"
+
+  - job_name: "node-exporter"
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - "app-host:9100"
+
+  - job_name: "postgres-exporter"
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - "app-host:9187"
+
+  - job_name: "redis-exporter"
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - "app-host:9121"
+
+  - job_name: "cadvisor"
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - "app-host:8081"
+
+  - job_name: "elasticsearch-exporter"
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - "elk-host:9114"
