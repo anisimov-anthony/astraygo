@@ -37,8 +37,8 @@ func main() {
 	router.Use(gin.Recovery())
 	router.Use(logging.ZapLogger(logger))
 
-	router.GET("/objects/ids", func(c *gin.Context) {
-		handler.GetAllIDs(c)
+	router.GET("/objects", func(c *gin.Context) {
+		handler.GetObjects(c)
 	})
 
 	router.GET("/objects/:id", func(c *gin.Context) {

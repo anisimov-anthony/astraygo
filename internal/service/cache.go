@@ -10,7 +10,7 @@ import (
 
 type Cache interface {
 	GetObjectByID(ID int64) (*ObjectInfo, error)
-	UpdateObjectLocation(object *ObjectInfo) (*ObjectInfo, error)
+	UpdateObject(object *ObjectInfo) (*ObjectInfo, error)
 	WarmUp(repo Repository)
 }
 
@@ -23,18 +23,18 @@ func NewRedisCache(client *redis.Client) *RedisCache {
 }
 
 func (r *RedisCache) WarmUp(repo Repository) {
-	listIDs, err := repo.GetAllIDs()
+	listIDs, err := repo.GetActiveIDs()
 	if err != nil {
 		panic(err)
 	}
 
-	for _, ID := range *listIDs {
+	for _, ID := range listIDs {
 		object, err := repo.GetObjectByID(ID)
 		if err != nil {
 			panic(err)
 		}
 
-		result, err := r.UpdateObjectLocation(object)
+		result, err := r.UpdateObject(object)
 		if err != nil {
 			panic(err)
 		}
@@ -44,10 +44,10 @@ func (r *RedisCache) WarmUp(repo Repository) {
 	}
 }
 
+// TODO: think about context
 func (r *RedisCache) GetObjectByID(ID int64) (*ObjectInfo, error) {
 	var object ObjectInfo
 
-	// TODO: think about context
 	err := r.redisClient.HGetAll(context.Background(), strconv.FormatInt(ID, 10)).Scan(&object)
 
 	if err != nil {
@@ -57,9 +57,9 @@ func (r *RedisCache) GetObjectByID(ID int64) (*ObjectInfo, error) {
 	return &object, nil
 }
 
-func (r *RedisCache) UpdateObjectLocation(object *ObjectInfo) (*ObjectInfo, error) {
+// TODO: think about context
+func (r *RedisCache) UpdateObject(object *ObjectInfo) (*ObjectInfo, error) {
 
-	// TODO: think about context
 	err := r.redisClient.HSet(context.Background(), strconv.FormatInt(object.ID, 10), object).Err()
 
 	if err != nil {

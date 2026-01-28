@@ -20,29 +20,37 @@ func InitPostgres() *pgxpool.Pool {
 		panic(err)
 	}
 
-	// TODO: think about context
 	pool, err := pgxpool.NewWithConfig(context.Background(), pgConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	// TODO: think about context
 	if err := pool.Ping(context.Background()); err != nil {
 		panic(err)
 	}
 
-	// TODO: need index
-	sql := `
+	enablePostGIS := `CREATE EXTENSION IF NOT EXISTS postgis;`
+	if _, err := pool.Exec(context.Background(), enablePostGIS); err != nil {
+		panic(err)
+	}
+
+	createTableObjects := `
 			CREATE TABLE IF NOT EXISTS objects (
 				object_id BIGINT PRIMARY KEY,
-				latitude DOUBLE PRECISION NOT NULL,
-				longitude DOUBLE PRECISION NOT NULL,
+				status BOOLEAN NOT NULL,
+				location GEOMETRY(Point, 4326) NOT NULL,
 				time TIMESTAMPTZ NOT NULL
 			);
 	`
+	if _, err := pool.Exec(context.Background(), createTableObjects); err != nil {
+		panic(err)
+	}
 
-	// TODO: think about context
-	if _, err := pool.Exec(context.Background(), sql); err != nil {
+	createIndexObjectsLocation := `
+		CREATE INDEX IF NOT EXISTS objects_location_idx
+		ON objects USING GIST (location);
+	`
+	if _, err := pool.Exec(context.Background(), createIndexObjectsLocation); err != nil {
 		panic(err)
 	}
 

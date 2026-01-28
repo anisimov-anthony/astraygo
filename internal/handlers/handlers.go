@@ -16,24 +16,30 @@ func InitAstrayHandler(service *service.AstrayService) *AstrayHandler {
 	return &AstrayHandler{service: service}
 }
 
-func (h *AstrayHandler) GetAllIDs(c *gin.Context) {
-	IDs := h.service.GetAllIDs()
-	c.JSON(http.StatusOK, IDs)
-}
+func (h *AstrayHandler) GetObjects(c *gin.Context) {
+	statusQuery := c.Query("status")
 
-func (h *AstrayHandler) PostObject(c *gin.Context) {
-	var updatedObject service.ObjectInfo
-	if err := c.BindJSON(&updatedObject); err != nil {
+	var status *bool
+	if statusQuery == "" {
+		status = nil
+	} else if statusQuery == "true" {
+		val := true
+		status = &val
+	} else if statusQuery == "false" {
+		val := false
+		status = &val
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "status must be 'true' or 'false'"})
 		return
 	}
 
-	updated, err := h.service.UpdateObjectLocation(&updatedObject)
+	objects, err := h.service.GetObjects(status)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot update object"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot get objects"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, updated)
+	c.JSON(http.StatusOK, objects)
 }
 
 func (h *AstrayHandler) GetObjectByID(c *gin.Context) {
@@ -50,4 +56,19 @@ func (h *AstrayHandler) GetObjectByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, object)
+}
+
+func (h *AstrayHandler) PostObject(c *gin.Context) {
+	var updatedObject service.ObjectInfo
+	if err := c.BindJSON(&updatedObject); err != nil {
+		return
+	}
+
+	updated, err := h.service.UpdateObjectLocation(&updatedObject)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot update object"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, updated)
 }
