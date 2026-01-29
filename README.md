@@ -46,6 +46,8 @@ In `wrk_load` directory:
 ./generate_report.sh
 ``` 
 
+You can see report of results in `wrk_load/wrk_results/BENCHMARK_REPORT.md`
+
 ## License
 
 MIT License - see [LICENSE](LICENSE)

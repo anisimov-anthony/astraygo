@@ -1,5 +1,5 @@
 local POOL_START = 1
-local POOL_END = 100000
+local POOL_END = 1000
 
 math.randomseed(os.time())
 
